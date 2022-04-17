@@ -16,10 +16,24 @@ jieba.setLogLevel(log_level=logging.INFO)
 
 
 class BM25Param(object):
-    def __init__(self, f, df, idf, length, avg_length, docs_list, line_length_list,k1=1.5, b=0.75):
+    def __init__(self, f, df, idf, length, avg_length, docs_list, line_length_list,k1=1.5, k2=1.0,b=0.75):
+        """
+
+        :param f:
+        :param df:
+        :param idf:
+        :param length:
+        :param avg_length:
+        :param docs_list:
+        :param line_length_list:
+        :param k1: 可调整参数，[1.2, 2.0]
+        :param k2: 可调整参数，[1.2, 2.0]
+        :param b:
+        """
         self.f = f
         self.df = df
         self.k1 = k1
+        self.k2 = k2
         self.b = b
         self.idf = idf
         self.length = length
@@ -28,7 +42,7 @@ class BM25Param(object):
         self.line_length_list = line_length_list
 
     def __str__(self):
-        return f"k1:{self.k1}, b:{self.b}"
+        return f"k1:{self.k1}, k2:{self.k2}, b:{self.b}"
 
 
 class BM25(object):
@@ -123,6 +137,11 @@ class BM25(object):
         return score
 
     def cal_similarity(self, query: str):
+        """
+        相似度计算，无排序结果
+        :param query: 待查询结果
+        :return: [(doc, score), ..]
+        """
         words = [word for word in jieba.lcut(query) if word and word not in self._stop_words]
         score_list = []
         for index in range(self.param.length):
@@ -130,9 +149,25 @@ class BM25(object):
             score_list.append((self.param.docs_list[index], score))
         return score_list
 
+    def cal_similarity_rank(self, query: str):
+        """
+        相似度计算，排序
+        :param query: 待查询结果
+        :return: [(doc, score), ..]
+        """
+        result = self.cal_similarity(query)
+        result.sort(key=lambda x: -x[1])
+        return result
+
+
 
 if __name__ == '__main__':
     bm25 = BM25()
-    result = bm25.cal_similarity("自然语言处理并不是一般地研究自然语言")
+    query_content = "自然语言处理并不是一般地研究自然语言"
+    result = bm25.cal_similarity(query_content)
+    for line, score in result:
+        print(line, score)
+    print("**"*20)
+    result = bm25.cal_similarity_rank(query_content)
     for line, score in result:
         print(line, score)
