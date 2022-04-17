@@ -78,11 +78,6 @@ class BM25(object):
                     df[word] = df.get(word, 0) + 1
             for word, num in df.items():
                 idf[word] = math.log(length - num + 0.5) - math.log(num + 0.5)
-            #     if idf[word] < 0:
-            #         print(length)
-            #         print(num)
-            #         break
-            # exit()
             param = BM25Param(f, df, idf, length, words_count / length, docs_list, line_length_list)
             return param
 
@@ -127,7 +122,7 @@ class BM25(object):
             score += molecular / denominator
         return score
 
-    def cal_similarity(self, query):
+    def cal_similarity(self, query: str):
         words = [word for word in jieba.lcut(query) if word and word not in self._stop_words]
         score_list = []
         for index in range(self.param.length):
